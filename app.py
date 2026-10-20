@@ -4,7 +4,7 @@ import pandas as pd
 # --------------------------------------------------------------------------
 # 1. 디자인 설정
 # --------------------------------------------------------------------------
-st.set_page_config(layout="wide", page_title="10x AI_ Marketing Smart Hub")
+st.set_page_config(layout="wide", page_title="10x AI _ Smart Marketing Hub")
 
 st.markdown("""
 <style>
@@ -113,7 +113,7 @@ def get_data():
 # --------------------------------------------------------------------------
 # 3. 화면 그리기
 # --------------------------------------------------------------------------
-st.markdown('<div class="main-title">🚀 10x AI_마케팅 스마트 허브</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🚀 10x AI _ Smart Marketing Hub</div>', unsafe_allow_html=True)
 
 df, alert_msg = get_data()
 
