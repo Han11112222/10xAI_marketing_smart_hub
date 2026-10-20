@@ -4,7 +4,7 @@ import pandas as pd
 # --------------------------------------------------------------------------
 # 1. 디자인 설정
 # --------------------------------------------------------------------------
-st.set_page_config(layout="wide", page_title="10x AI_마케팅 스마트 허브")
+st.set_page_config(layout="wide", page_title="10x AI_ Marketing Smart Hub")
 
 st.markdown("""
 <style>
