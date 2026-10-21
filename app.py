@@ -4,8 +4,9 @@ import pandas as pd
 # --------------------------------------------------------------------------
 # 0. 설정값
 # --------------------------------------------------------------------------
-# 리스트 영역에 회색 배경을 줄 섹션 이름 (시트의 '구분' 값과 동일해야 함). 여러 개도 가능.
-HIGHLIGHT_CATEGORIES = ["Key Support"]
+# 리스트 영역에 회색 배경을 줄 섹션 이름 (시트의 '구분' 값). 여러 개도 가능.
+# 빈 리스트 [] 로 두면 모든 섹션에 회색 배경이 적용됩니다.
+HIGHLIGHT_CATEGORIES = []
 
 SHEET_URL = (
     "https://docs.google.com/spreadsheets/d/"
@@ -185,12 +186,18 @@ if not df.empty and '구분' in df.columns:
                 '</div>'
             )
 
-        box_class = "list-box highlight" if category in HIGHLIGHT_CATEGORIES else "list-box"
+        # 시트 값에 공백/대소문자 차이가 있어도 매칭되도록 정리해서 비교
+        is_highlight = (not HIGHLIGHT_CATEGORIES) or (
+            str(category).strip().casefold() in [h.strip().casefold() for h in HIGHLIGHT_CATEGORIES]
+        )
+        box_class = "list-box highlight" if is_highlight else "list-box"
+        # 배경색은 인라인 스타일로도 직접 지정 (CSS가 덮어써지는 경우 방지)
+        box_style = "background-color:#f1f3f5; border-radius:0 0 8px 8px; padding-bottom:6px;" if is_highlight else ""
         st.markdown(
             '<div class="section-wrap">'
             f'<div class="section-header"><span class="folder-icon">📂</span> {category}</div>'
             '<div class="divider-top"></div>'
-            f'<div class="{box_class}">{"".join(rows_html)}</div>'
+            f'<div class="{box_class}" style="{box_style}">{"".join(rows_html)}</div>'
             '</div>',
             unsafe_allow_html=True,
         )
