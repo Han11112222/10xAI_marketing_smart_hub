@@ -17,7 +17,10 @@ st.markdown("""
 
     .section-header {
         font-size: 18px; font-weight: 700; color: #1e40af;
-        margin-top: 50px; margin-bottom: 10px;
+        margin-top: 50px; margin-bottom: 0;
+        padding: 10px 14px;
+        background-color: #e0ecff; /* 연한 푸른색 하이라이트 */
+        border-radius: 8px 8px 0 0;
         display: flex; align-items: center; gap: 8px;
     }
 
