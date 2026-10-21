@@ -2,17 +2,6 @@ import streamlit as st
 import pandas as pd
 
 # --------------------------------------------------------------------------
-# 0. 설정값
-# --------------------------------------------------------------------------
-# 배경색으로 강조할 섹션 이름 (시트의 '구분' 값과 동일해야 함). 여러 개도 가능.
-HIGHLIGHT_CATEGORIES = ["Key Support"]
-
-SHEET_URL = (
-    "https://docs.google.com/spreadsheets/d/"
-    "1Fv6w0QM7xXMMo85q-uLq2INbDSodM9AshbalxVifhdI/export?format=csv&gid=0"
-)
-
-# --------------------------------------------------------------------------
 # 1. 디자인 설정
 # --------------------------------------------------------------------------
 st.set_page_config(layout="wide", page_title="10x AI _ Smart Marketing Hub")
@@ -26,28 +15,18 @@ st.markdown("""
         color: #2c3e50; display: flex; align-items: center; gap: 10px;
     }
 
-    /* 섹션 전체를 감싸는 영역 */
-    .section-wrap { margin-top: 50px; margin-bottom: 40px; }
-
-    /* 강조 섹션: 전체 영역 연한 회색 배경 */
-    .section-box {
-        background-color: #f1f3f5;
-        border-radius: 10px;
-        padding: 14px 16px 12px 16px;
-    }
-    .section-box .list-header { background-color: #e5e7eb; }
-    .section-box .list-row { border-bottom: 1px solid #dee2e6; }
-    .section-box .list-row:hover { background-color: #f8f9fa; }
-
     .section-header {
         font-size: 18px; font-weight: 700; color: #1e40af;
-        margin-bottom: 10px;
+        margin-top: 50px; margin-bottom: 0;
+        padding: 10px 14px;
+        background-color: #e0ecff; /* 연한 푸른색 하이라이트 */
+        border-radius: 8px 8px 0 0;
         display: flex; align-items: center; gap: 8px;
     }
 
     .divider-top { border-top: 2px solid #1e40af; margin-bottom: 0; }
 
-    /* 컬럼 제목줄 스타일 */
+    /* 컬럼 제목줄 스타일 (회색 배경) */
     .list-header {
         display: flex; justify-content: space-between; align-items: center;
         padding: 10px 10px;
@@ -85,10 +64,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 # --------------------------------------------------------------------------
 # 2. 데이터 로드 및 청소
 # --------------------------------------------------------------------------
+SHEET_URL = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1Fv6w0QM7xXMMo85q-uLq2INbDSodM9AshbalxVifhdI/export?format=csv&gid=0"
+)
+
+
 @st.cache_data(ttl=60)  # 60초마다 시트를 새로 읽어옴 (시트 수정 시 자동 반영)
 def get_data():
     backup_data = [
@@ -96,6 +80,7 @@ def get_data():
     ]
 
     try:
+        # 헤더 위치를 찾기 위해 먼저 header=None 으로 읽습니다.
         raw = pd.read_csv(SHEET_URL, header=None)
 
         header_idx = -1
@@ -112,11 +97,13 @@ def get_data():
         df = df.fillna("")
         df.columns = [c.strip() if isinstance(c, str) else c for c in df.columns]
 
+        # 불필요한 헤더 행 제거
         if '내용' in df.columns:
             trash_words = ['상세분류', '구분', '내용', '기능', '활용도']
             df = df[~df['내용'].isin(trash_words)]
             df = df[df['내용'] != ""]
 
+        # 병합 셀로 비어있는 '구분'은 위 값으로 채우기
         if '구분' in df.columns:
             df['구분'] = df['구분'].replace("", pd.NA).ffill()
 
@@ -136,57 +123,58 @@ df, alert_msg = get_data()
 if alert_msg:
     st.markdown(f'<div class="alert-box">{alert_msg}</div>', unsafe_allow_html=True)
 
-if not df.empty and '구분' in df.columns:
-    for category in df['구분'].unique():
-        if not category or pd.isna(category):
-            continue
-
-        # 섹션 전체를 HTML 한 덩어리로 만들어야 배경색이 영역 전체에 적용됩니다.
-        # (들여쓰기/빈 줄이 있으면 마크다운이 코드블록으로 오인하므로 한 줄씩 이어 붙임)
-        parts = [
-            f'<div class="section-header"><span class="folder-icon">📂</span> {category}</div>',
-            '<div class="divider-top"></div>',
-            '<div class="list-header">'
-            '<div class="content-area" style="padding-left: 5px;">내용</div>'
-            '<div class="star-rating">활용도</div>'
-            '<div class="link-area">링크</div>'
-            '</div>',
-        ]
-
-        section_data = df[df['구분'] == category]
-        for _, row in section_data.iterrows():
-            title = row.get('내용', row.get('Title', ''))
-            if not title or title in ['상세분류', '구분']:
+if not df.empty:
+    if '구분' in df.columns:
+        categories = df['구분'].unique()
+        for category in categories:
+            if not category or pd.isna(category):
                 continue
 
-            desc = row.get('기능', row.get('설명', ''))
-            stars_val = row.get('활용도', row.get('별점', 0))
-            link = row.get('링크', row.get('Link', '#'))
-            if not link:
-                link = "#"
+            # 1. 섹션 헤더
+            st.markdown(f"""
+                <div class="section-header"><span class="folder-icon">📂</span> {category}</div>
+                <div class="divider-top"></div>
+            """, unsafe_allow_html=True)
 
-            try:
-                if isinstance(stars_val, str) and "★" in stars_val:
-                    stars = stars_val
-                else:
-                    stars = "★" * int(float(stars_val)) if stars_val else "☆☆☆☆☆"
-            except Exception:
-                stars = "☆☆☆☆☆"
+            # 2. 컬럼 헤더 (내용 | 활용도 | 링크)
+            st.markdown("""
+            <div class="list-header">
+                <div class="content-area" style="padding-left: 5px;">내용</div>
+                <div class="star-rating">활용도</div>
+                <div class="link-area">링크</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-            parts.append(
-                '<div class="list-row">'
-                '<div class="content-area">'
-                f'<span class="content-title">{title}</span>'
-                f'<span class="content-desc">{desc}</span>'
-                '</div>'
-                f'<div class="star-rating" style="color:#f59e0b;">{stars}</div>'
-                f'<div class="link-area"><a href="{link}" target="_blank" class="link-btn">Link 🔗</a></div>'
-                '</div>'
-            )
+            # 3. 데이터 리스트 출력
+            section_data = df[df['구분'] == category]
+            for _, row in section_data.iterrows():
+                title = row.get('내용', row.get('Title', ''))
+                if not title or title in ['상세분류', '구분']:
+                    continue
 
-        inner = "".join(parts)
-        box_class = "section-box" if category in HIGHLIGHT_CATEGORIES else ""
-        st.markdown(
-            f'<div class="section-wrap"><div class="{box_class}">{inner}</div></div>',
-            unsafe_allow_html=True,
-        )
+                desc = row.get('기능', row.get('설명', ''))
+                stars_val = row.get('활용도', row.get('별점', 0))
+                link = row.get('링크', row.get('Link', '#'))
+                if not link:
+                    link = "#"
+
+                try:
+                    if isinstance(stars_val, str) and "★" in stars_val:
+                        stars = stars_val
+                    else:
+                        stars = "★" * int(float(stars_val)) if stars_val else "☆☆☆☆☆"
+                except Exception:
+                    stars = "☆☆☆☆☆"
+
+                st.markdown(f"""
+                <div class="list-row">
+                    <div class="content-area">
+                        <span class="content-title">{title}</span>
+                        <span class="content-desc">{desc}</span>
+                    </div>
+                    <div class="star-rating" style="color:#f59e0b;">{stars}</div>
+                    <div class="link-area"><a href="{link}" target="_blank" class="link-btn">Link 🔗</a></div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
