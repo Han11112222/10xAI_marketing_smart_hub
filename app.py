@@ -5,8 +5,8 @@ import pandas as pd
 # 0. 설정값
 # --------------------------------------------------------------------------
 # 리스트 영역에 회색 배경을 줄 섹션 이름 (시트의 '구분' 값). 여러 개도 가능.
-# 빈 리스트 [] 로 두면 모든 섹션에 회색 배경이 적용됩니다.
-HIGHLIGHT_CATEGORIES = []
+# 공백/대소문자 차이는 무시하고 비교합니다. (빈 리스트 [] 로 두면 모든 섹션에 적용)
+HIGHLIGHT_CATEGORIES = ["Key Support"]
 
 SHEET_URL = (
     "https://docs.google.com/spreadsheets/d/"
