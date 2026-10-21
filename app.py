@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 import pandas as pd
 
@@ -187,8 +188,12 @@ if not df.empty and '구분' in df.columns:
             )
 
         # 시트 값에 공백/대소문자 차이가 있어도 매칭되도록 정리해서 비교
-        is_highlight = (not HIGHLIGHT_CATEGORIES) or (
-            str(category).strip().casefold() in [h.strip().casefold() for h in HIGHLIGHT_CATEGORIES]
+        # 공백·특수문자·이모지·보이지 않는 문자까지 제거하고 "포함 여부"로 비교
+        def _norm(s):
+            return re.sub(r"[^0-9a-zA-Z가-힣]", "", str(s)).casefold()
+
+        is_highlight = (not HIGHLIGHT_CATEGORIES) or any(
+            _norm(h) in _norm(category) for h in HIGHLIGHT_CATEGORIES
         )
         box_class = "list-box highlight" if is_highlight else "list-box"
         # 배경색은 인라인 스타일로도 직접 지정 (CSS가 덮어써지는 경우 방지)
